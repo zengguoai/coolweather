@@ -6,7 +6,10 @@ import org.litepal.crud.DataSupport;
  * Created by weiguanghua on 18-3-19.
  */
 
-public class Province extends DataSupport {//准备创建3张表，对应实体类，省市县的数据信息
+/**
+ * 省级ID 省名  省代号
+ * */
+public class Province extends DataSupport {
     private int id;
     private String provinceName;
     private int provinceCode;

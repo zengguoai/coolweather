@@ -6,6 +6,9 @@ import org.litepal.crud.DataSupport;
  * Created by weiguanghua on 18-3-19.
  */
 
+/**
+ * 县ID 县名 县级天气信息 县代号
+ * */
 public class County extends DataSupport {
     private int id;
     private String countyName;

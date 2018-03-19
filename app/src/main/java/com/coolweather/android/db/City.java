@@ -5,6 +5,10 @@ import org.litepal.crud.DataSupport;
 /**
  * Created by weiguanghua on 18-3-19.
  */
+/**
+ * 城市ID  城市名  城市代号 省ID
+ *
+ * */
 
 public class City extends DataSupport {
     private int id;
