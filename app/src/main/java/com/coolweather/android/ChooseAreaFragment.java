@@ -2,6 +2,7 @@ package com.coolweather.android;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -58,12 +59,10 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area,container,false);
-        Log.d("wgh","onCreateView");
         titleText = view.findViewById(R.id.title_text);
         backButton = view.findViewById(R.id.back_button);
         listView = view.findViewById(R.id.list_view);
         adapter = new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,datalist);
-        Log.d("wgh","datalist="+datalist);
         listView.setAdapter(adapter);
         return view;
     }
@@ -74,20 +73,24 @@ public class ChooseAreaFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("wgh","onActivityCreated");
                 if(currentLevel == LEVEL_PROVINCE){
                     selectProvince = provinceList.get(position);
                     queryCities();
                 }else if(currentLevel == LEVEL_CITY){
                     selectedCity = cityList.get(position);
                     queryCounties();
+                }else if(currentLevel==LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(),WeatherActivity.class);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
                 }
             }
         });
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("wgh","backButton.setOnClickListener");
                 if(currentLevel == LEVEL_COUNTY){
                     queryCities();
                 }else if(currentLevel == LEVEL_CITY){
@@ -101,11 +104,9 @@ public class ChooseAreaFragment extends Fragment {
  * 查询全国所有的省，优先从数据库查询，如果没有查询到再去服务器上查询
  * */
     private void queryProvinces() {
-        Log.d("wgh","queryProvinces");
         titleText.setText("中国");
         backButton.setVisibility(View.GONE);
         provinceList = DataSupport.findAll(Province.class);
-        Log.d("wgh","provinceList="+provinceList);
         if(provinceList.size()>0){
             datalist.clear();
             for(Province province : provinceList){
@@ -114,11 +115,9 @@ public class ChooseAreaFragment extends Fragment {
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
             currentLevel = LEVEL_PROVINCE;
-            Log.d("wgh","currentLevel ="+currentLevel);
         }else{
             String address = "http://guolin.tech/api/china";
             queryFromServer(address,"province");
-            Log.d("wgh","queryCities in guolin.tech");
         }
     }
     /**
@@ -129,10 +128,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText.setText(selectProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
         cityList = DataSupport.where("provinceid = ?",String.valueOf(selectProvince.getId())).find(City.class);
-        Log.d("wgh","selectProvince.getId()="+selectProvince.getId());
-        Log.d("wgh","cityList="+cityList);
         if(cityList.size()>0){
-            Log.d("wgh","cityList.size()>0");
             datalist.clear();
             for(City city:cityList){
                 datalist.add(city.getCityName());
@@ -141,7 +137,6 @@ public class ChooseAreaFragment extends Fragment {
             listView.setSelection(0);
             currentLevel = LEVEL_CITY;
         }else {
-            Log.d("wgh","queryCities in guolin.tech");
             int provinceCode = selectProvince.getProvinceCode();
             String address = "http://guolin.tech/api/china/"+provinceCode;
             queryFromServer(address,"city");
@@ -151,7 +146,6 @@ public class ChooseAreaFragment extends Fragment {
      * 查询全国所有的县，优先从数据库查询，如果没有查询到再去服务器上查询
      * */
     private void queryCounties() {
-        Log.d("wgh","queryCounties");
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
         countyList = DataSupport.where("cityid = ?",String.valueOf(selectedCity.getId())).find(County.class);
@@ -193,7 +187,6 @@ public class ChooseAreaFragment extends Fragment {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                Log.d("wgh","queryFromServer onResponse");
                 String responseText = response.body().string();
                 boolean result = false;
                 if("province".equals(type)){
