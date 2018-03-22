@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"/>
+    <LinearLayout
+        android:paddingTop="20dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <CheckBox
+           android:gravity="center"
+            android:id="@+id/bing_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="是否启用Bing每日一图"
+            android:textSize="20sp"
+            />
+        <CheckBox
+            android:gravity="center"
+            android:id="@+id/update_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="是否启用后台自动更新"
+            android:textSize="20sp"
+            />
+    </LinearLayout>
+</LinearLayout>

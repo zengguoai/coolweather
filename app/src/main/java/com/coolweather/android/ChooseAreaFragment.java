@@ -3,7 +3,9 @@ package com.coolweather.android;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,13 +14,16 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.coolweather.android.db.City;
 import com.coolweather.android.db.County;
 import com.coolweather.android.db.Province;
+import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
 
@@ -54,6 +59,7 @@ public class ChooseAreaFragment extends Fragment {
     private Province selectProvince;  //选中的省份
     private City selectedCity;  //选中的城市
     private int currentLevel;   //当前选中的级别
+    private SharedPreferences prefs;
 
     @Nullable
     @Override
@@ -62,6 +68,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText = view.findViewById(R.id.title_text);
         backButton = view.findViewById(R.id.back_button);
         listView = view.findViewById(R.id.list_view);
+        prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         adapter = new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,datalist);
         listView.setAdapter(adapter);
         return view;
