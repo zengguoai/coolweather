@@ -13,7 +13,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,7 +28,6 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.Weather;
-import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
 
@@ -46,9 +44,11 @@ import okhttp3.Response;
 public class WeatherActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
     private ScrollView weatherLayout;
     private TextView titleCity,titleUpdateTime,degreeText,
-            weatherInfoText,aqiText,pm25Text,comfortText,carWashText,sportText;
+            weatherInfoText,qltyText,aqiText,pm25Text,comfortText,carWashText,sportText;
+    private TextView flText,humText,presText,visText,dirText,spdText;
     private LinearLayout forecastLayout;
     private ImageView bingPicImg;
+
     public SwipeRefreshLayout swipeRefreshLayout;
     public DrawerLayout drawerLayout;
     private Button navButton;
@@ -57,12 +57,13 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
     private NavigationView navigationView;
     private View headerLayout;
     private ImageView bingImage;
+    private ImageView weatherImage;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(Build.VERSION.SDK_INT>=21){  //实现状态栏透明效果
             Window window = this.getWindow();
-           // window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(Color.TRANSPARENT);
@@ -78,8 +79,16 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         titleCity = findViewById(R.id.title_city);
         titleUpdateTime = findViewById(R.id.title_update_time);
+        weatherImage=findViewById(R.id.weather_icon);
         degreeText = findViewById(R.id.degree_text);
         weatherInfoText = findViewById(R.id.weather_info_text);
+        flText = findViewById(R.id.fl_text);
+        humText = findViewById(R.id.hum_text);
+        presText = findViewById(R.id.pres_text);
+        visText=findViewById(R.id.vis_text);
+        dirText=findViewById(R.id.dir_text);
+        spdText=findViewById(R.id.spd_text);
+        qltyText= findViewById(R.id.qlty_text);
         aqiText = findViewById(R.id.aqi_text);
         pm25Text = findViewById(R.id.pm25_text);
         comfortText = findViewById(R.id.comfort_text);
@@ -164,7 +173,6 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
     }
 
     private void loadBingPic() {
-        final String bingChecxbox = prefs.getString("checkbox_bing",null);
         String requestBingPic = "http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
             @Override
@@ -181,12 +189,8 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(bingChecxbox!=null && bingChecxbox.equals("on") ){
                             Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
                             Glide.with(WeatherActivity.this).load(bingPic).into(bingImage);
-                        }else{
-                            Log.d("wgh","请启用每日一图的设置");
-                        }
                     }
                 });
             }
@@ -194,40 +198,35 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
     }
 
     private void showWeatherInfo(Weather weather) {
-        String switch_status = prefs.getString("checkbox_update","off");
-        if(weather!=null && "ok".equals(weather.status)){
-            if(switch_status.equals("on")){
-                Intent intent = new Intent(this, AutoUpdateService.class);
-                startService(intent);
-            }else if(switch_status.equals("off")){
-                Intent intent = new Intent(this, AutoUpdateService.class);
-                stopService(intent);
-            }
-        }else{
-            Toast.makeText(WeatherActivity.this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
-        }
         String cityName = weather.basic.cityName;
         String updateTime = weather.basic.update.updateTime.split(" ")[1];
-        String degree = weather.now.temperature+"'C";
-        String weatherInfo = weather.now.more.info;
+        String degree = weather.now.temperature+" 'C";
         titleCity.setText(cityName);
-        titleUpdateTime.setText(updateTime);
-        degreeText.setText(degree);
-        weatherInfoText.setText(weatherInfo);
+        titleUpdateTime.setText("当地时间："+updateTime);
+        degreeText.setText("  "+degree);
+        weatherInfoText.setText(weather.now.more.info);
+        showNowweatherImage(weather);
+        flText.setText(weather.now.fl + " 'C");
+        humText.setText(weather.now.hum + " %");
+        presText.setText(weather.now.pres );
+        visText.setText(weather.now.vis);
+        dirText.setText(weather.now.wind_dir);
+        spdText.setText(weather.now.wind_spd );
         forecastLayout.removeAllViews();
         for(Forecast forecast:weather.forecastList){
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item,forecastLayout,false);
             TextView dateText = view.findViewById(R.id.date_text);
             TextView indoText = view.findViewById(R.id.info_text);
-            TextView maxText = view.findViewById(R.id.max_text);
-            TextView minText = view.findViewById(R.id.min_text);
+            ImageView weatherimage = view.findViewById(R.id.forecat_item_image);
+            TextView minText = view.findViewById(R.id.maxmin_text);
             dateText.setText(forecast.date);
             indoText.setText(forecast.more.info);
-            maxText.setText(forecast.temperatrue.max);
-            minText.setText(forecast.temperatrue.min);
+            showForecastweatherImage(weatherimage,forecast);
+            minText.setText(forecast.temperatrue.max+" ~ "+forecast.temperatrue.min);
             forecastLayout.addView(view);
         }
         if(weather.aqi!=null){
+            qltyText.setText(weather.aqi.city.qlty);
             aqiText.setText(weather.aqi.city.aqi);
             pm25Text.setText(weather.aqi.city.pm25);
         }
@@ -237,6 +236,36 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
         comfortText.setText(comfort);
         carWashText.setText(carWash);
         sportText.setText(sport);
+    }
+
+    private void showForecastweatherImage(ImageView imageView,Forecast forecast) {
+        String forecastWeatherInfo = forecast.more.info;
+        if(forecastWeatherInfo.contains("晴")){
+            imageView.setImageResource(R.drawable.ic__weather_sunny);
+        }else if(forecastWeatherInfo.contains("云")){
+            imageView.setImageResource(R.drawable.ic__weather_cloundy);
+        }else if(forecastWeatherInfo.contains("雨")){
+            imageView.setImageResource(R.drawable.ic__weather_shower);
+        }else if(forecastWeatherInfo.contains("雪")){
+            imageView.setImageResource(R.drawable.ic__weather_snow4);
+        }else if(forecastWeatherInfo.contains("雷")){
+            imageView.setImageResource(R.drawable.ic__weather_tstorm3);
+        }
+    }
+
+    private void showNowweatherImage(Weather weather) {
+        String weatherinfo = weather.now.more.info;
+        if(weatherinfo.contains("晴")){
+            weatherImage.setImageResource(R.drawable.ic__weather_sunny);
+        }else if(weatherinfo.contains("云")){
+            weatherImage.setImageResource(R.drawable.ic__weather_cloundy);
+        }else if(weatherinfo.contains("雨")){
+            weatherImage.setImageResource(R.drawable.ic__weather_shower);
+        }else if(weatherinfo.contains("雪")){
+            weatherImage.setImageResource(R.drawable.ic__weather_snow4);
+        }else if(weatherinfo.contains("雷")){
+            weatherImage.setImageResource(R.drawable.ic__weather_tstorm3);
+        }
     }
 
     @Override
@@ -254,7 +283,8 @@ public class WeatherActivity extends AppCompatActivity implements NavigationView
                 startActivity(intent2);
                 break;
             case R.id.about_item:
-                Toast.makeText(WeatherActivity.this,"版本号 1.1",Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(WeatherActivity.this,AboutAppInfoActivity.class);
+                startActivity(intent);
                 break;
         }
         return true;

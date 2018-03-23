@@ -1,5 +1,6 @@
 package com.coolweather.android;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -9,6 +10,8 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import com.coolweather.android.service.AutoUpdateService;
 
 /**
  * Created by weiguanghua on 18-3-21.
@@ -37,19 +40,29 @@ public class WeatherSettings extends AppCompatActivity implements CompoundButton
                 if(isChecked){
                     editor.putString("checkbox_bing","on");
                     editor.apply();
+                    Intent intent = new Intent(this, AutoUpdateService.class);
+                    startService(intent);
                 }else{
                     editor.putString("checkbox_bing","off");
                     editor.apply();
+                    Intent intent = new Intent(this, AutoUpdateService.class);
+                    stopService(intent);
                 }
+                editor.clear();
                 break;
             case R.id.update_checkbox:
                 if(isChecked){
                     editor.putString("checkbox_update","on");
                     editor.apply();
+                    Intent intent = new Intent(this, AutoUpdateService.class);
+                    startService(intent);
                 }else {
                     editor.putString("checkbox_update","off");
                     editor.apply();
+                    Intent intent = new Intent(this, AutoUpdateService.class);
+                    stopService(intent);
                 }
+                editor.clear();
                 break;
         }
     }

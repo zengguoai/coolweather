@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -28,21 +29,41 @@ import okhttp3.Response;
  */
 
 public class AutoUpdateService extends Service {
-
+    private SharedPreferences prefs;
+    private AlarmManager manager;
+    private  PendingIntent pi;
+    private String weather_status,bing_status;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        updateWeather();
-        updateBingPic();
-        AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        int anHour = 8*60*60*1000;
-        long triggerAtTime = SystemClock.currentThreadTimeMillis()+anHour;
-        Intent i = new Intent(this,AutoUpdateService.class);
-        PendingIntent pi = PendingIntent.getService(this,0,i,0);
-        manager.cancel(pi);
-        manager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        weather_status = prefs.getString("checkbox_update","off");
+        bing_status = prefs.getString("checkbox_bing","off");
+        if(weather_status.equals("on")) {
+            Log.d("wgh","您启动自动更新天气了");
+            updateWeather();
+            alarmWork();
+        }else {
+            Log.d("wgh","请启动自动更新天气");
+        }
+        if(bing_status.equals("on")){
+            Log.d("wgh","您启动每日一图了");
+            updateBingPic();
+            alarmWork();
+        }else{
+            Log.d("wgh","请启动每日一图");
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
+    private void alarmWork(){
+        manager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        int anHour = 8*60*60*1000;
+        long triggerAtTime = SystemClock.currentThreadTimeMillis()+anHour;
+        Intent i = new Intent(this,AutoUpdateService.class);
+        pi = PendingIntent.getService(this,0,i,0);
+        manager.cancel(pi);
+        manager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
+    }
     private void updateBingPic() {
         String requestBingPic = "http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
@@ -97,5 +118,14 @@ public class AutoUpdateService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if(manager!=null && pi!=null){
+            manager.cancel(pi);
+            Log.d("wgh","您取消了定时任务");
+        }
+        if(weather_status.equals("off")&&bing_status.equals("off")){
+            stopSelf();
+            Log.d("wgh","您取消了所有服务");
+        }
+
     }
 }

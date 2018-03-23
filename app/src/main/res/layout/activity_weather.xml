@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/colorPrimary">
+    android:background="#fff">
     <ImageView
         android:id="@+id/bing_pic_img"
         android:layout_width="match_parent"
@@ -44,6 +44,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="left"
+            app:itemIconTint="@color/colorAccent"
+            app:itemTextColor="@color/colorPrimary"
             app:menu="@menu/slide_menu"
             app:headerLayout="@layout/slide_header">
         </android.support.design.widget.NavigationView>
